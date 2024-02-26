@@ -20,20 +20,36 @@ fun <E> transpose(matrix: Matrix<E>): Matrix<E> {
     return result
 }
 
-fun <E> rotate(matrix: Matrix<E>): Matrix<E> = TODO()
+fun <E> rotate(matrix: Matrix<E>): Matrix<E> = transpose(matrix)
 
 /**
  * Сложить две заданные матрицы друг с другом.
  * Складывать можно только матрицы совпадающего размера -- в противном случае бросить IllegalArgumentException.
  * При сложении попарно складываются соответствующие элементы матриц
  */
-operator fun Matrix<Int>.plus(other: Matrix<Int>): Matrix<Int> = TODO(this.toString())
+operator fun Matrix<Int>.plus(other: Matrix<Int>): Matrix<Int> {
+    if(this.width != other.width || other.height != other.height)
+        throw IllegalArgumentException("Invalid params")
+    val nw = createMatrix(this.height,this.width,0)
+    for (i in 0..<this.height)
+        for(j in 0..<this.width)
+            nw[i,j] =  this[i, j] + other[i, j]
+
+    return  nw
+}
 
 /**
  * Инвертировать заданную матрицу.
  * При инвертировании знак каждого элемента матрицы следует заменить на обратный
  */
-operator fun Matrix<Int>.unaryMinus(): Matrix<Int> = TODO(this.toString())
+operator fun Matrix<Int>.unaryMinus(): Matrix<Int>{
+
+    val nw = createMatrix(this.height,this.width,0)
+    for (i in 0..<this.height)
+        for(j in 0..<this.width)
+            nw[i,j] =  -1 * this[i, j]
+    return  nw
+}
 
 /**
  * Перемножить две заданные матрицы друг с другом.
@@ -41,7 +57,18 @@ operator fun Matrix<Int>.unaryMinus(): Matrix<Int> = TODO(this.toString())
  * В противном случае бросить IllegalArgumentException.
  * Подробно про порядок умножения см. статью Википедии "Умножение матриц".
  */
-operator fun Matrix<Int>.times(other: Matrix<Int>): Matrix<Int> = TODO(this.toString())
+operator fun Matrix<Int>.times(other: Matrix<Int>): Matrix<Int> {
+
+    if(this.width != other.height)
+        throw IllegalArgumentException("Invalid params")
+
+    val nw = createMatrix(this.height,other.width,0)
+    for (i in 0..<this.height)
+        for(j in 0..<other.width)
+            for(k in 0..<this.width)
+                nw[i,j] += this[i,k]*other[k,j]
+    return  nw
+}
 
 
 /**
@@ -57,7 +84,29 @@ operator fun Matrix<Int>.times(other: Matrix<Int>): Matrix<Int> = TODO(this.toSt
  * 0 0 1 0
  * 0 0 0 0
  */
-fun findHoles(matrix: Matrix<Int>): Holes = TODO()
+fun findHoles(matrix: Matrix<Int>): Holes{
+   val r = MutableList<Int>(0){0}
+   val c = MutableList<Int>(0){0}
+
+   val rr = MutableList<Int>(matrix.height){0}
+    val cc = MutableList<Int>(matrix.width){0}
+
+    for (i in 0..<matrix.height)
+        for(j in 0..<matrix.width){
+            rr[i] += matrix[i,j]
+            cc[j] += matrix[i,j]
+        }
+
+    for (i in 0..<matrix.height)
+        if(rr[i] == 0)
+            r.add(i)
+
+    for(j in 0..<matrix.width)
+        if(cc[j] == 0)
+            c.add(j)
+
+    return Holes(rows = r, columns = c)
+}
 
 /**
  * Класс для описания местонахождения "дырок" в матрице
@@ -82,4 +131,18 @@ data class Holes(val rows: List<Int>, val columns: List<Int>)
  * Вернуть тройку (Triple) -- (да/нет, требуемый сдвиг по высоте, требуемый сдвиг по ширине).
  * Если наложение невозможно, то первый элемент тройки "нет" и сдвиги могут быть любыми.
  */
-fun canOpenLock(key: Matrix<Int>, lock: Matrix<Int>): Triple<Boolean, Int, Int> = TODO()
+fun canOpenLock(key: Matrix<Int>, lock: Matrix<Int>): Triple<Boolean, Int, Int> {
+    for (i in 0..lock.width-key.width){
+        for(j in 0..lock.height-key.height){
+            var sum = 0
+            for (ii in 0..<key.width){
+                for(jj in 0..<key.height){
+                    sum += key[ii,jj].xor(lock[i+ii,j+jj])
+                }
+            }
+            if(sum == key.height * key.width)
+                    return Triple(true,i,j)
+        }
+    }
+    return Triple(false,-1,-1)
+}

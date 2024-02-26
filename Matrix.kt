@@ -38,32 +38,69 @@ interface Matrix<E> {
  * height = высота, width = ширина, e = чем заполнить элементы.
  * Бросить исключение IllegalArgumentException, если height или width <= 0.
  */
-fun <E> createMatrix(height: Int, width: Int, e: E): Matrix<E> = TODO()
+fun <E> createMatrix(height: Int, width: Int, e: E): Matrix<E> {
+    if(height <= 0 || width <= 0)
+        throw IllegalArgumentException("Invalid params")
+    return MatrixImpl<E>(height,width,e)
+}
 
 /**
  * Реализация интерфейса "матрица"
  */
 
 @Suppress("EqualsOrHashCode")
-class MatrixImpl<E> : Matrix<E> {
+class MatrixImpl<E>( h: Int, w: Int, e : E) : Matrix<E> {
 
-    override val height: Int = TODO()
+    private val lst  = MutableList<MutableList<E>>(h){MutableList<E>(w){e} }
 
-    override val width: Int = TODO()
+    override val height:Int = h
 
-    override fun get(row: Int, column: Int): E = TODO()
+    override val width: Int = w
 
-    override fun get(cell: Cell): E = TODO()
+    private fun checkParams(row:Int,column: Int):Boolean{
+      //  println(row.toString()+","+column.toString())
+        return !(row < 0 || row >= lst.size || column < 0 || column >= lst[0].size)
+    }
+
+    private fun checkParams(c:Cell):Boolean{
+        return checkParams(c.row,c.column)
+    }
+
+    override fun get(row: Int, column: Int): E {
+        if(checkParams(row,column) && lst[row][column] != null)
+          return lst[row][column]
+        throw IllegalArgumentException("Invalid params")
+    }
+
+    override fun get(cell: Cell): E {
+        return get(cell.row,cell.column)
+    }
 
     override fun set(row: Int, column: Int, value: E) {
-        TODO()
+        if(checkParams(row,column))
+            lst[row][column] = value
+        else
+            throw IllegalArgumentException("Invalid params")
     }
 
     override fun set(cell: Cell, value: E) {
-        TODO()
+        set(cell.row,cell.column,value)
     }
 
-    override fun equals(other: Any?) = TODO()
+    override fun equals(other: Any?):Boolean{
+        if(other !is MatrixImpl<*>)
+            throw IllegalArgumentException("type mismatch")
+        //if(other.height != this.height || other.width != this.width)
+         //   return false
+        return other.lst == this.lst
+    }
 
-    override fun toString(): String = TODO()
+    override fun toString(): String {
+        var str:String = ""
+        for (i in 0..<width)
+            for(j in 0..<height)
+                str += lst[j][i].toString() + ","
+            str += "\n"
+        return  str
+    }
 }
